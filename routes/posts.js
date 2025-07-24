@@ -36,4 +36,14 @@ router.get('/', async(req, res) => {
     }
 })
 
+router.get('/:id', async(req, res) => {
+    try {
+        const post = await Post.findById(req.params.id).populate('author', 'username');
+        if(!post) return res.status(404).json({message: 'post not found'});
+        res.json(post)
+    } catch (error) {
+        res.status(500).json({message: 'server error', error})
+    }
+})
+
 export default router;
