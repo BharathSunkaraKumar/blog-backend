@@ -2,8 +2,14 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { isAdmin } from '../middleware/authMiddleware.js';
+import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
+
+router.get('/admin-data', verifyToken, isAdmin,(req, res) => {
+    res.json({message: 'Welcome admin, here is your data'})
+})
 
 router.post('/register', async(req, res) => {
     const {name, email, password} = req.body;
@@ -12,7 +18,7 @@ router.post('/register', async(req, res) => {
         if(existing) return res.status(400).json({message: 'User already exists'});
 
         const hash = await bcrypt.hash(password, 10);
-        const newUser = await User.create({name, email, password: hash});
+        const newUser = await User.create({name, email, password: hash, role: 'user'});
         const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET, {
             expiresIn: '7d'
         });
@@ -31,7 +37,7 @@ router.post('/login', async(req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({message: 'Invalid credentials'});
 
-        const token = jwt.sign({id:user._id}, process.env.JWT_SECRET, {
+        const token = jwt.sign({id:user._id, email: user.email, role: user.role}, process.env.JWT_SECRET, {
             expiresIn: '7d',
         })
 

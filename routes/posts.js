@@ -1,6 +1,9 @@
 import express from 'express'
 import Post from '../models/Post.js';
 import jwt from 'jsonwebtoken';
+import { verifyToken } from '../middleware/verifyToken.js';
+import { isAdmin } from '../middleware/authMiddleware.js';
+import { deletePost } from '../controllers/postController.js';
 
 const router = express.Router();
 
@@ -45,5 +48,7 @@ router.get('/:id', async(req, res) => {
         res.status(500).json({message: 'server error', error})
     }
 })
+
+router.delete('/:id', verifyToken, isAdmin, deletePost);
 
 export default router;
